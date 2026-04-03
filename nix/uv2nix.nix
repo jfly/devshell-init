@@ -199,10 +199,36 @@ in
         };
 
         packages.default = self'.packages.${project.pname};
-        packages.${project.pname} = mkApplication {
-          venv = pythonSet.mkVirtualEnv "application-env" workspace.deps.default;
-          package = project;
-        };
+
+        # This is an awkward dance to generate shell completions. See
+        # <https://github.com/pyproject-nix/pyproject.nix/issues/429>.
+        packages.${project.pname} =
+          let
+            package = (
+              mkApplication {
+                venv = pythonSet.mkVirtualEnv "application-env" workspace.deps.default;
+                package = project;
+              }
+            );
+            cmd = package.meta.mainProgram;
+          in
+          pkgs.symlinkJoin {
+            inherit (package) name meta;
+            paths = [
+              package
+            ];
+
+            nativeBuildInputs = [ pkgs.installShellFiles ];
+            postBuild = ''
+              # Typer tries to guess the current shell by default
+              export _TYPER_COMPLETE_TEST_DISABLE_SHELL_DETECTION=1
+
+              installShellCompletion --cmd ${cmd} \
+                --bash <($out/bin/${cmd} --show-completion bash) \
+                --fish <($out/bin/${cmd} --show-completion fish) \
+                --zsh <($out/bin/${cmd} --show-completion zsh)
+            '';
+          };
       };
   };
 }
