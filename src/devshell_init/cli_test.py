@@ -115,3 +115,16 @@ class TestCreate:
             )
             envrc = Path(".envrc")
             assert envrc.read_text() == "use flake\n"
+
+    def test_unrecognized_project_structure(self):
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            check_run(["git", "init"])
+            envrc = Path(".envrc")
+            envrc.write_text("bogus")
+
+            result = runner.invoke(app, ["--force"])
+            assert (result.exit_code, result.output) == (
+                1,
+                "I'm not sure how to create a devshell for this project\n",
+            )

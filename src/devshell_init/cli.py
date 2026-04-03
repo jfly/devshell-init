@@ -5,6 +5,8 @@ from typing import Annotated
 
 import typer
 
+from .build_devshell import build_devshell
+
 app = typer.Typer()
 
 
@@ -107,14 +109,10 @@ def main(
         print("This doesn't look like a git repo")
         raise typer.Exit(1)
 
-    envrc = Path(".envrc")
-    env_cmds: list[str] = []
-    if Path("flake.nix").exists():
-        env_cmds.append("use flake")
-
-    maybe_create = {
-        envrc: env_cmds,
-    }
+    maybe_create = build_devshell()
+    if maybe_create is None:
+        print("I'm not sure how to create a devshell for this project")
+        raise typer.Exit(1)
 
     tracked_files = [p for p in maybe_create.keys() if is_tracked(p)]
     if len(tracked_files) > 0:
