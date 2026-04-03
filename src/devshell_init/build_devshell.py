@@ -1,6 +1,8 @@
 # This is the meat of the project: various heuristics to
 # build a devshell for projects.
 
+import os
+import subprocess
 from pathlib import Path
 from typing import Callable
 
@@ -45,6 +47,50 @@ def maybe_flake() -> MaybeDevshell:  # pragma: no cover
     return None
 
 
+def get_current_system():  # pragma: no cover
+    cp = subprocess.run(
+        ["nix", "config", "show", "system"],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+    )
+    return cp.stdout.strip()
+
+
+def flake_has_devshell(
+    flakeref: str, system: str, devshell: str
+) -> bool:  # pragma: no cover
+    cp = subprocess.run(
+        [
+            "nix",
+            "eval",
+            f"{flakeref}#devShells",
+            "--apply",
+            f"devShells: (devShells.{system}.{devshell} or false) != false",
+        ],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+    )
+    return {
+        "true": True,
+        "false": False,
+    }[cp.stdout.strip()]
+
+
+@devshell_builder
+def maybe_devshed() -> MaybeDevshell:  # pragma: no cover
+    if (devshed_flakeref := os.environ.get("DEVSHED_FLAKEREF")) is not None:
+        prj_name = Path(".").resolve().name
+        system = get_current_system()
+        if flake_has_devshell(devshed_flakeref, system, prj_name):
+            return {
+                ENVRC: [f'use flake "$DEVSHED_FLAKEREF#{prj_name}"'],
+            }
+
+    return None
+
+
 @devshell_builder
 def maybe_go() -> MaybeDevshell:  # pragma: no cover
     if Path("go.mod").exists():
@@ -66,6 +112,18 @@ def maybe_python() -> MaybeDevshell:  # pragma: no cover
             ENVRC: [
                 "use nix -p python3",
                 "layout python",
+            ],
+        }
+
+    return None
+
+
+@devshell_builder
+def maybe_node() -> MaybeDevshell:  # pragma: no cover
+    if Path("package-lock.json").exists():
+        return {
+            ENVRC: [
+                "use nix -p nodejs",
             ],
         }
 

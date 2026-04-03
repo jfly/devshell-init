@@ -16,3 +16,20 @@ there's a little bit of dancing required to do this:
 `devshell-init` does this for you. It also accepts few options, such as
 `--check`, which is useful for checking if the devshell defined for your project
 is something it knows how to recreate.
+
+## Heuristics
+
+The various heuristics for how to create a devshell live in
+`src/devshell_init/build_devshell.py`. We stop after the first matching
+heuristic. None of these are particularly appropriate for interesting monorepos.
+A couple of notable heuristics:
+
+- `maybe_flake`: ideally, projects have a `flake.nix` that defines a dev shell.
+- `maybe_devshed`: checks for a devshell defined in
+  [devshed](https://github.com/jfly/devshed). Only enabled if there is a
+  `DEVSHED_FLAKEREF` environment variable that whose value is a
+  [flakeref](https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-references)
+  pointing to [devshed](https://github.com/jfly/devshed) (for example,
+  `github:jfly/devshed`).
+- Various language ecosystem helpers (`maybe_python`, `maybe_go`, etc). Sort of
+  a "maybe this will work" best guess.
