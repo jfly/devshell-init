@@ -1,6 +1,7 @@
 # This is the meat of the project: various heuristics to
 # build a devshell for projects.
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -60,13 +61,16 @@ def get_current_system():  # pragma: no cover
 def flake_has_devshell(
     flakeref: str, system: str, devshell: str
 ) -> bool:  # pragma: no cover
+    # JSON strings are usually (always?) valid nix strings.
+    escaped_devshell = json.dumps(devshell)
+
     cp = subprocess.run(
         [
             "nix",
             "eval",
             f"{flakeref}#devShells",
             "--apply",
-            f"devShells: (devShells.{system}.{devshell} or false) != false",
+            f"devShells: (devShells.{system}.{escaped_devshell} or false) != false",
         ],
         check=True,
         text=True,
