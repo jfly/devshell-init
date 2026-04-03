@@ -151,7 +151,8 @@ def maybe_python() -> MaybeDevshell:  # pragma: no cover
 def maybe_rust() -> MaybeDevshell:  # pragma: no cover
     if Path("Cargo.toml").exists():
         return {
-            ENVRC: ["use nix -p cargo rust-analyzer"],
+            # https://wiki.nixos.org/wiki/Rust#Shell.nix_example
+            ENVRC: ["use nix -p rustc cargo clippy rust-analyzer rustfmt"],
         }
 
     return None
