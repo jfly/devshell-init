@@ -148,6 +148,16 @@ def maybe_python() -> MaybeDevshell:  # pragma: no cover
 
 
 @devshell_builder
+def maybe_rust() -> MaybeDevshell:  # pragma: no cover
+    if Path("Cargo.toml").exists():
+        return {
+            ENVRC: ["use nix -p cargo rust-analyzer"],
+        }
+
+    return None
+
+
+@devshell_builder
 def maybe_node() -> MaybeDevshell:  # pragma: no cover
     if Path("package-lock.json").exists():
         return {
