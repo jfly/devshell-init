@@ -3,6 +3,8 @@
 
 import json
 import os
+import re
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Callable
@@ -82,14 +84,37 @@ def flake_has_devshell(
     }[cp.stdout.strip()]
 
 
+def maybe_escape_flakeref_attr(attr: str) -> str:
+    """
+    >>> maybe_escape_flakeref_attr("vim")
+    'vim'
+
+    >>> maybe_escape_flakeref_attr("cubing.js")
+    '"cubing.js"'
+
+    >>> maybe_escape_flakeref_attr("cubing-js")
+    'cubing-js'
+    """
+
+    ok_re = re.compile(r"[A-Za-z][-A-Za-z0-9]*")
+    needs_escaping = not ok_re.fullmatch(attr)
+
+    if needs_escaping:
+        # JSON strings are usually (always?) valid nix strings.
+        return json.dumps(attr)
+    else:
+        return attr
+
+
 @devshell_builder
 def maybe_devshed() -> MaybeDevshell:  # pragma: no cover
     if (devshed_flakeref := os.environ.get("DEVSHED_FLAKEREF")) is not None:
         prj_name = Path(".").resolve().name
         system = get_current_system()
         if flake_has_devshell(devshed_flakeref, system, prj_name):
+            prj_name = shlex.quote(maybe_escape_flakeref_attr(prj_name))
             return {
-                ENVRC: [f'use flake "$DEVSHED_FLAKEREF#{prj_name}"'],
+                ENVRC: [f'use flake "$DEVSHED_FLAKEREF"#{prj_name}'],
             }
 
     return None
