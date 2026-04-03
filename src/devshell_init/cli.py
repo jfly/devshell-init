@@ -10,9 +10,30 @@ from .build_devshell import build_devshell
 app = typer.Typer()
 
 
+def is_comment_or_whitespace(line: str) -> bool:
+    """
+    Checks if this line is a comment or entirely whitespace. Empty lines count as all whitespace.
+
+    >>> is_comment_or_whitespace("yooo")
+    False
+
+    >>> is_comment_or_whitespace("# yooo")
+    True
+
+    >>> is_comment_or_whitespace("")
+    True
+
+    >>> is_comment_or_whitespace("   ")
+    True
+    """
+    return line == "" or line.isspace() or line.startswith("#")
+
+
 def get_diff_ignoring_comments(p: Path, expected_lines: list[str]) -> str | None:
     actual_lines = [
-        line for line in p.read_text().splitlines() if not line.startswith("#")
+        line
+        for line in p.read_text().splitlines()
+        if not is_comment_or_whitespace(line)
     ]
 
     if actual_lines != expected_lines:
@@ -41,7 +62,7 @@ def is_all_comments(contents: str) -> bool:
     >>> is_all_comments("# comment1\n\nline1")
     False
     """
-    return all(line == "" or line.startswith("#") for line in contents.splitlines())
+    return all(is_comment_or_whitespace(line) for line in contents.splitlines())
 
 
 def is_tracked(p: Path) -> bool:
