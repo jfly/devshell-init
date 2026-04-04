@@ -1,9 +1,40 @@
 import subprocess
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import IO, Any
 
-from typer.testing import CliRunner
+from click.testing import Result
+from typer.main import Typer
+from typer.testing import CliRunner as _CliRunner
 
 from .cli import app
+
+
+class CliRunner(_CliRunner):
+    """
+    Subclass of CliRunner that defaults to `catch_exceptions=False`.
+    I have no idea why the default is True...
+    """
+
+    def invoke(
+        self,
+        app: Typer,
+        args: str | Sequence[str] | None = None,
+        input: bytes | str | IO[Any] | None = None,
+        env: Mapping[str, str | None] | None = None,
+        catch_exceptions: bool = False,
+        color: bool = False,
+        **extra: Any,
+    ) -> Result:
+        return super().invoke(
+            app,
+            args=args,
+            input=input,
+            env=env,
+            catch_exceptions=catch_exceptions,
+            color=color,
+            **extra,
+        )
 
 
 def check_run(args: list[str]) -> str:

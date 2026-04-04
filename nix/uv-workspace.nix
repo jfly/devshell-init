@@ -15,6 +15,8 @@
         nativeCheckInputs = [
           # Used in <src/devshell_init/cli_test.py>
           pkgs.git
+          pkgs.direnv
+          pkgs.writableTmpDirAsHomeHook # `direnv allow` needs a working HOME
         ];
       };
     };

@@ -185,6 +185,9 @@ def main(
                 print(f"Creating: {path}")
                 path.write_text(join_lines(lines))
 
+    if not check:
+        subprocess.run(["direnv", "allow"], check=True)
+
     if errors:
         raise typer.Exit(1)
     else:
