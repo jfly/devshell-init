@@ -70,6 +70,7 @@ def is_tracked(p: Path) -> bool:
         ["git", "ls-files", "--error-unmatch", str(p)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        check=False,  # We check the exit code next.
     )
     return cp.returncode == 0
 
@@ -135,7 +136,7 @@ def main(
         print("I'm not sure how to create a devshell for this project")
         raise typer.Exit(1)
 
-    tracked_files = [p for p in maybe_create.keys() if is_tracked(p)]
+    tracked_files = [p for p in maybe_create if is_tracked(p)]
     if len(tracked_files) > 0:
         pretty_paths = "\n".join(f"  {p}" for p in tracked_files)
         print(f"I see these path(s) are tracked:\n{pretty_paths}")
@@ -144,7 +145,7 @@ def main(
 
     if exclude:
         maybe_create[Path(".git/info/exclude")] = [
-            *(to_abs_repo_path(p) for p in maybe_create.keys()),
+            *(to_abs_repo_path(p) for p in maybe_create),
             "/.direnv/",
         ]
 

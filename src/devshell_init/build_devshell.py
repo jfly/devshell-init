@@ -6,8 +6,8 @@ import os
 import re
 import shlex
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 MaybeDevshell = dict[Path, list[str]] | None
 
@@ -109,7 +109,7 @@ def maybe_escape_flakeref_attr(attr: str) -> str:
 @devshell_builder
 def maybe_devshed() -> MaybeDevshell:  # pragma: no cover
     if (devshed_flakeref := os.environ.get("DEVSHED_FLAKEREF")) is not None:
-        prj_name = Path(".").resolve().name
+        prj_name = Path.cwd().name
         system = get_current_system()
         if flake_has_devshell(devshed_flakeref, system, prj_name):
             prj_name = shlex.quote(maybe_escape_flakeref_attr(prj_name))

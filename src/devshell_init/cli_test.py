@@ -89,13 +89,15 @@ class TestDiff:
             result = runner.invoke(app, ["--check", "--verbose"])
             assert (result.exit_code, result.output) == (
                 1,
-                "File doesn't match: .envrc\n"
-                "--- actual-.envrc\n"
-                "+++ expected-.envrc\n"
-                "@@ -1 +1 @@\n"
-                "-use flakey\n"
-                "+use flake\n"
-                "\n",
+                (
+                    "File doesn't match: .envrc\n"
+                    "--- actual-.envrc\n"
+                    "+++ expected-.envrc\n"
+                    "@@ -1 +1 @@\n"
+                    "-use flakey\n"
+                    "+use flake\n"
+                    "\n"
+                ),
             )
 
     def test_tracked_devshell(self):
@@ -110,9 +112,11 @@ class TestDiff:
             result = runner.invoke(app, ["--check"])
             assert (result.exit_code, result.output) == (
                 0,
-                "I see these path(s) are tracked:\n"
-                "  .envrc\n"
-                "There must be a dev shell already provided by this repo.\n",
+                (
+                    "I see these path(s) are tracked:\n"
+                    "  .envrc\n"
+                    "There must be a dev shell already provided by this repo.\n"
+                ),
             )
 
 
